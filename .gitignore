@@ -1,0 +1,5 @@
+# Python garbage
+*.egg-info
+__pycache__
+
+# Dev files
