@@ -1,5 +1,13 @@
-# Python garbage
-*.egg-info
+# Package artifacts
 __pycache__
+*.py[cod]
+*.egg-info
+build
+dist
 
-# Dev files
+# uv
+.venv
+
+# Unit test / coverage reports
+.coverage
+.pytest_cache

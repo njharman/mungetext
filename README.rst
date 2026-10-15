@@ -1,4 +1,11 @@
 Munge Text Tools
+================
+
+Generator-based tools to parse and reformat PDFs converted to text (e.g. by ``pdftotext``) into ReStructuredText.
+
+Install::
+
+  uv add git+https://github.com/njharman/mungetext
 
 
 Example::
@@ -24,11 +31,16 @@ Example::
                   redo = True
               else:
                   accum.append(line)
-              collecting = munge.parse.lookfor(lambda l: l.endswith('.'), accum, munge.space_reduce)
+              collecting = mungetext.lookfor(lambda l: l.endswith('.'), accum, mungetext.space_reduce)
               continue
           yield line
       if collecting:
           yield collecting(line)
 
-    lines = parse(strip_emptylines(by_para(replace_typography(strip_newlines(open('file'))))))
-    output(lines)
+    lines = parse(mungetext.strip_emptylines(mungetext.by_para(mungetext.replace_typography(mungetext.strip_newlines(open('file'))))))
+    print(*lines, sep='\n')
+
+License
+-------
+
+MIT, see ``LICENSE``.

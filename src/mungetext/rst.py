@@ -6,7 +6,7 @@ TITLES = ['*', '=', '-', '~']
 
 def page(style):
     """ReST Page break."""
-    return '\n.. page:: %s\n' % style
+    return f'\n.. page:: {style}\n'
 
 
 def escape_asterisk(text):
@@ -18,7 +18,7 @@ def title(level, text):
     """ReST Title at level."""
     if level not in TITLES:
         level = TITLES[int(level)]
-    return '\n%s\n%s' % (text, level * len(text))
+    return f'\n{text}\n{level * len(text)}'
 
 
 def title_by_regex(lines, regexes, level):

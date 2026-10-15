@@ -1,10 +1,10 @@
-# vim: set fileencoding=utf-8
 """Parse and reformat PDF's converted to text."""
 import re
 from collections import defaultdict
 
 from . import out, rst
-from .version import __version__
+
+__version__ = '0.0.1'
 
 PAGE_BREAK = '\f'
 
@@ -15,7 +15,7 @@ alpha_sort = lambda key: [int(t) if t.isdigit() else t for t in re.split('([0-9]
 
 
 def match_any(line, regexes):
-    """return first regex that matches line or None."""
+    """Return first regex that matches line or None."""
     for regex in regexes:
         if match := regex.match(line):
             return match
@@ -36,8 +36,7 @@ def lookfor(test, accum, reduce):
     def finder(line):
         accum.append(line)
         if test(line):
-            for thing in reduce(accum):
-                yield thing
+            yield from reduce(accum)
 
     return finder
 
@@ -56,24 +55,24 @@ def space_reduce(lines):
 
 # Line Oriented.
 
-def joinlines(lines, start, seperator=' '):
+def joinlines(lines, start, separator=' '):
     """Join continuation lines into one line.
 
     start(line) returns True if line is start of new line.
     Else line is concatinated to previous line.
 
-    concatinated lines are joined by seperator.
+    concatinated lines are joined by separator.
     """
     accum = list()
     for line in lines:
         if start(line):
             if accum:
-                yield seperator.join(accum)
+                yield separator.join(accum)
             accum = list()
         accum.append(line)
     # Last one.
     if accum:
-        yield seperator.join(accum)
+        yield separator.join(accum)
 
 
 def replace_typography(lines):
@@ -82,7 +81,7 @@ def replace_typography(lines):
         yield line.replace('“', '"') \
                 .replace('”', '"') \
                 .replace('—', '--') \
-                .replace('’', '\'') \
+                .replace('\u2019', '\'') \
                 .replace('\xc2\x92', '\'') \
                 .replace('\xc2\x93', '"') \
                 .replace('\xc2\x94', '"') \
@@ -131,8 +130,8 @@ def strip(lines, char=None):
 def dehyphenate(lines):
     """Combine two lines with hypenated word into one line, removing hypen."""
     first = ''
-    for line in lines:
-        line = line.rstrip()
+    for raw in lines:
+        line = raw.rstrip()
         if len(line) > 1 and line[-1] == '-' and line[-2] != '-':
             first += line[:-1]
             continue
@@ -147,8 +146,8 @@ def by_simple_para(lines):
     """Combine multiple lines into one line, delineated by blank lines."""
     para = list()
     for line in lines:
-        if line.inestrip():
-            para.append(line.inestrip())
+        if line.strip():
+            para.append(line.strip())
         elif para:
             yield ' '.join(para)
             yield ''
@@ -180,7 +179,8 @@ def by_para(lines, tests=(), override=()):
     in_table = 0
     in_order = 0
     accumulate = list()
-    for line in lines:
+    for raw in lines:
+        line = raw
         # ReST directive. Must be first, sucks all lines until unindent.
         if line.startswith('.. '):
             yield ' '.join(accumulate)
@@ -197,7 +197,7 @@ def by_para(lines, tests=(), override=()):
                 accumulate = list()
         # ReST title
         if line and line[0] in rst.TITLES and len(accumulate) == 1 and len(accumulate[0]) == len(line):
-            yield '<title>%s\n%s' % (accumulate[0], line)
+            yield f'<title>{accumulate[0]}\n{line}'
             accumulate = list()
             continue
         # ReST table
@@ -206,7 +206,7 @@ def by_para(lines, tests=(), override=()):
                 yield ' '.join(accumulate)
                 line = '<table>' + line
                 accumulate = list()
-            if in_table < 2:  # Tables, have three === seperator lines.
+            if in_table < 2:  # Tables, have three === separator lines.
                 in_table += 1
             else:  # End table.
                 in_table = 0
@@ -266,8 +266,7 @@ def break_regex_factory(regex, newline=False):
 def detwocolumn(lines):
     """Convert twocolumn (from PDF) to one."""
     for page in by_page(lines):
-        for line in twocolumn_page_to_onecolumn_lines(page):
-            yield line
+        yield from twocolumn_page_to_onecolumn_lines(page)
 
 
 def by_page(lines):
@@ -292,7 +291,7 @@ def twocolumn_page_to_onecolumn_lines(page):
         if not line.strip():
             continue
         found_three = False
-        for halfsie in range(0, max(0, len(line) - 3)):
+        for halfsie in range(max(0, len(line) - 3)):
             if line[halfsie:halfsie + 4] == '    ':
                 found_three = True
             if not found_three:
@@ -301,10 +300,9 @@ def twocolumn_page_to_onecolumn_lines(page):
                 break
         if not found_three:
             continue
-        else:
-            lengths[halfsie] += 1
+        lengths[halfsie] += 1
     if lengths:
-        winnar = sorted(lengths.items(), key=lambda x: x[1])[-1][0]
+        winnar = max(reversed(lengths.items()), key=lambda x: x[1])[0]  # Ties go to the last seen.
     else:
         winnar = 0
     one = list()
@@ -315,7 +313,7 @@ def twocolumn_page_to_onecolumn_lines(page):
             continue
         # Find column of first non space after three spaces.
         found_three = False
-        for halfsie in range(0, max(0, len(line) - 3)):
+        for halfsie in range(max(0, len(line) - 3)):
             if line[halfsie:halfsie + 4] == '    ':
                 found_three = True
             if not found_three:
