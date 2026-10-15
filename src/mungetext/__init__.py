@@ -1,4 +1,5 @@
 """Parse and reformat PDF's converted to text."""
+
 import re
 from collections import defaultdict
 
@@ -33,6 +34,7 @@ def slurp_re(stopon, i, lines, strip):
 
 def lookfor(test, accum, reduce):
     """TBD."""
+
     def finder(line):
         accum.append(line)
         if test(line):
@@ -42,6 +44,7 @@ def lookfor(test, accum, reduce):
 
 
 # Lookfor tests.
+
 
 def is_cap(char):
     """Func lookfor test."""
@@ -54,6 +57,7 @@ def space_reduce(lines):
 
 
 # Line Oriented.
+
 
 def joinlines(lines, start, separator=' '):
     """Join continuation lines into one line.
@@ -78,14 +82,16 @@ def joinlines(lines, start, separator=' '):
 def replace_typography(lines):
     """Replace weirdo characters."""
     for line in lines:
-        yield line.replace('“', '"') \
-                .replace('”', '"') \
-                .replace('—', '--') \
-                .replace('\u2019', '\'') \
-                .replace('\xc2\x92', '\'') \
-                .replace('\xc2\x93', '"') \
-                .replace('\xc2\x94', '"') \
-                .replace('\xe2\x80\x93', '-')
+        yield (
+            line.replace('“', '"')
+            .replace('”', '"')
+            .replace('—', '--')
+            .replace('\u2019', "'")
+            .replace('\xc2\x92', "'")
+            .replace('\xc2\x93', '"')
+            .replace('\xc2\x94', '"')
+            .replace('\xe2\x80\x93', '-')
+        )
 
 
 def strip_newlines(lines, strip='\n'):
@@ -110,7 +116,7 @@ def strip_commentlines(lines, char='#'):
 
 def strip_comments(lines, char='#'):
     """Remove from comment character to end of line."""
-    regex = re.compile(fr'(.*){char}.*$')
+    regex = re.compile(rf'(.*){char}.*$')
     for line in lines:
         if match := regex.match(line):
             yield match.group(1)
@@ -120,7 +126,7 @@ def strip_comments(lines, char='#'):
 
 def strip(lines, char=None):
     if char:
-        args = (char, )
+        args = (char,)
     else:
         args = ()
     for line in lines:
@@ -248,6 +254,7 @@ def break_list(line, accum):
 
 def break_regex_factory(regex, newline=False):
     """TBD."""
+
     def break_regex(line, accum):
         # Break when regex matches
         if matcher.search(line):
@@ -262,6 +269,7 @@ def break_regex_factory(regex, newline=False):
 
 
 # Page Oriented
+
 
 def detwocolumn(lines):
     """Convert twocolumn (from PDF) to one."""
@@ -292,7 +300,7 @@ def twocolumn_page_to_onecolumn_lines(page):
             continue
         found_three = False
         for halfsie in range(max(0, len(line) - 3)):
-            if line[halfsie:halfsie + 4] == '    ':
+            if line[halfsie : halfsie + 4] == '    ':
                 found_three = True
             if not found_three:
                 continue
@@ -314,7 +322,7 @@ def twocolumn_page_to_onecolumn_lines(page):
         # Find column of first non space after three spaces.
         found_three = False
         for halfsie in range(max(0, len(line) - 3)):
-            if line[halfsie:halfsie + 4] == '    ':
+            if line[halfsie : halfsie + 4] == '    ':
                 found_three = True
             if not found_three:
                 continue
@@ -325,10 +333,10 @@ def twocolumn_page_to_onecolumn_lines(page):
         else:
             one.append(line[:halfsie])
             # If second column is winnar+3 or winnar+2 assume it's paragraph leading indent.
-            if halfsie == winnar + 3 and line[halfsie - 3:halfsie] == '   ':
-                two.append(line[halfsie - 3:])
-            elif halfsie == winnar + 2 and line[halfsie - 2:halfsie] == '  ':
-                two.append(line[halfsie - 2:])
+            if halfsie == winnar + 3 and line[halfsie - 3 : halfsie] == '   ':
+                two.append(line[halfsie - 3 :])
+            elif halfsie == winnar + 2 and line[halfsie - 2 : halfsie] == '  ':
+                two.append(line[halfsie - 2 :])
             else:
                 two.append(line[halfsie:])
     return one + two

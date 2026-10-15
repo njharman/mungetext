@@ -1,4 +1,5 @@
 """Output functions."""
+
 import textwrap
 
 indenter = textwrap.TextWrapper(subsequent_indent='  ').fill
