@@ -26,7 +26,7 @@ def slurp_re(stopon, i, lines, strip):
     """Slurp lines until line matches re 'stopon'."""
     bits = list()
     bits.append(lines[i].rpartition(strip)[2].strip())
-    while not stopon.match(lines[i + 1]):
+    while i + 1 < len(lines) and not stopon.match(lines[i + 1]):
         i += 1
         bits.append(lines[i].strip())
     return i, ' '.join(bits).strip()
@@ -116,12 +116,8 @@ def strip_commentlines(lines, char='#'):
 
 def strip_comments(lines, char='#'):
     """Remove from comment character to end of line."""
-    regex = re.compile(rf'(.*){char}.*$')
     for line in lines:
-        if match := regex.match(line):
-            yield match.group(1)
-        else:
-            yield line
+        yield line.partition(char)[0]
 
 
 def strip(lines, char=None):
@@ -146,6 +142,8 @@ def dehyphenate(lines):
             first = ''
         else:
             yield line
+    if first:
+        yield first
 
 
 def by_simple_para(lines):
@@ -189,18 +187,18 @@ def by_para(lines, tests=(), override=()):
         line = raw
         # ReST directive. Must be first, sucks all lines until unindent.
         if line.startswith('.. '):
-            yield ' '.join(accumulate)
-            accumulate = list()
-            line = '<order>' + line
+            if accumulate:
+                yield ' '.join(dehyphenate(accumulate))
+            accumulate = ['<order>' + line]
             in_order = True
+            continue
         if in_order:
             if line.startswith(' ') or not line:
                 accumulate.append(line)
                 continue
-            else:
-                in_order = False
-                yield '\n'.join(accumulate)
-                accumulate = list()
+            in_order = False
+            yield '\n'.join(accumulate).rstrip()
+            accumulate = list()
         # ReST title
         if line and line[0] in rst.TITLES and len(accumulate) == 1 and len(accumulate[0]) == len(line):
             yield f'<title>{accumulate[0]}\n{line}'
@@ -209,7 +207,8 @@ def by_para(lines, tests=(), override=()):
         # ReST table
         if line.startswith('==='):
             if in_table == 0:  # End previous para, start table.
-                yield ' '.join(accumulate)
+                if accumulate:
+                    yield ' '.join(dehyphenate(accumulate))
                 line = '<table>' + line
                 accumulate = list()
             if in_table < 2:  # Tables, have three === separator lines.
@@ -226,15 +225,17 @@ def by_para(lines, tests=(), override=()):
         for test in breakfuncs:
             foo = test(line, accumulate)
             if foo:
-                yield ' '.join(dehyphenate(accumulate))
+                if text := ' '.join(dehyphenate(accumulate)):
+                    yield text
                 accumulate = list()
                 if foo is not True:
                     accumulate.append(foo)
                 break
         else:
             accumulate.append(line)
-    # TODO: might need '\n'.join
-    if accumulate:
+    if in_order:
+        yield '\n'.join(accumulate).rstrip()
+    elif accumulate:
         yield ' '.join(dehyphenate(accumulate))
 
 
@@ -282,9 +283,15 @@ def by_page(lines):
     page = list()
     for line in lines:
         if PAGE_BREAK in line:
-            page.pop()  # The pagenumber/footer
-            yield page
-            page = list()
+            before, _, after = line.partition(PAGE_BREAK)
+            if before.strip():
+                page.append(before)
+            if page:
+                page.pop()  # The pagenumber/footer
+            if page:
+                yield page
+            # Text following the break (pdftotext puts it at the start of the next page) is kept.
+            page = [after] if after.strip() else list()
         else:
             page.append(line)
     if page:

@@ -5,6 +5,12 @@ Unreleased
   * Ruff lint/format replaces flake8/isort.
   * joinlines() keyword "seperator" -> separator.
   * Fixed by_simple_para() calling nonexistent str.inestrip().
+  * Fixed dehyphenate() dropping a hyphenated final line.
+  * Fixed strip_comments() cutting at last (not first) comment char and treating it as a regex.
+  * Fixed slurp_re() IndexError when no line matches stopon.
+  * Fixed by_page() IndexError on leading page break; text after a page break is no longer dropped.
+  * Fixed by_para() never collecting ReST directives; no longer yields empty paragraphs.
+  * TitleByRegexFactory() accepts a str, compiled pattern, or iterable of either.
 
 Version  0.0.1 Dec/2021
   * Initial.

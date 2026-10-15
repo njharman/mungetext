@@ -1,5 +1,6 @@
 """ReStructuredText output tools."""
 
+import re
 from functools import wraps
 
 TITLES = ['*', '=', '-', '~']
@@ -35,12 +36,9 @@ def title_by_regex(lines, regexes, level):
 
 def TitleByRegexFactory(regexes, level='='):
     """ReST Title."""
-    try:
-        iter(regexes)
-    except TypeError:
-        regexes = [
-            regexes,
-        ]
+    if isinstance(regexes, str | re.Pattern):
+        regexes = [regexes]
+    regexes = [re.compile(x) for x in regexes]
 
     @wraps(title_by_regex)
     def inner(lines):
