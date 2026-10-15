@@ -63,9 +63,9 @@ def joinlines(lines, start, separator=' '):
     """Join continuation lines into one line.
 
     start(line) returns True if line is start of new line.
-    Else line is concatinated to previous line.
+    Else line is concatenated to previous line.
 
-    concatinated lines are joined by separator.
+    concatenated lines are joined by separator.
     """
     accum = list()
     for line in lines:
@@ -108,7 +108,7 @@ def strip_emptylines(lines):
 
 
 def strip_commentlines(lines, char='#'):
-    """Remove lines starting with char or whitepace and then char."""
+    """Remove lines starting with char or whitespace and then char."""
     for line in lines:
         if not line.lstrip().startswith(char):
             yield line
@@ -134,7 +134,7 @@ def strip(lines, char=None):
 
 
 def dehyphenate(lines):
-    """Combine two lines with hypenated word into one line, removing hypen."""
+    """Combine two lines with hyphenated word into one line, removing hyphen."""
     first = ''
     for raw in lines:
         line = raw.rstrip()

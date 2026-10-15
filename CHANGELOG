@@ -3,7 +3,7 @@ Unreleased
     uv (src/ layout), replacing setup.py. Python >=3.14.
   * MIT license.
   * Ruff lint/format replaces flake8/isort.
-  * joinlines() keyword seperator -> separator.
+  * joinlines() keyword "seperator" -> separator.
   * Fixed by_simple_para() calling nonexistent str.inestrip().
 
 Version  0.0.1 Dec/2021

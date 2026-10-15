@@ -24,7 +24,7 @@ path = "src/mungetext/__init__.py"
 dev = ["pre-commit>=4", "ruff>=0.16"]
 
 [tool.codespell]
-ignore-words-list = "winnar"
+ignore-words-list = "winnar,seperator"
 
 
 [tool.ruff]
